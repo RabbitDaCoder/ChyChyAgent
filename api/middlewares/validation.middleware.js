@@ -1,5 +1,5 @@
 import { body, validationResult } from "express-validator";
-import CustomError from "../utils/CustomError.js";
+import CustomError from "../utils/customError.js";
 
 export const validateBlog = [
   body("title").notEmpty().withMessage("Title is required"),

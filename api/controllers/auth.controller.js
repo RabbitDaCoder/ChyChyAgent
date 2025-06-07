@@ -1,5 +1,5 @@
 import User from "../models/user.model.js";
-import CustomError from "../utils/CustomError.js";
+import CustomError from "../utils/customError.js";
 import cloudinary from "../libs/cloudinary.js";
 import generateTokens from "../utils/generateToken.js";
 import storeRefreshToken from "../utils/storeRefreshToken.js";

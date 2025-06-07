@@ -14,32 +14,67 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import {
-  monthlyData,
-  weeklyData,
-  yearlyData,
-  pieCOLORS,
-  pieData,
-} from "../utils/data";
 import { Link } from "react-router-dom";
 import AnalyticsCard from "../components/AnalyticsCard";
 import { useBlogStore } from "../../stores/useBlogStore";
 import { formattedDate } from "../../utils/dateFormatter";
+
 const Dashboard = ({ darkMode }) => {
-  const [timeFrame, setTimeFrame] = useState("weekly");
+  const [timeFrame, setTimeFrame] = useState("monthly");
   const [blog, setBlogs] = useState([]);
-  const { getAllBlog, blogs } = useBlogStore();
+  const {
+    getAllBlog,
+    blogs,
+    fetchMonthlyStats,
+    fetchCategoryStats,
+    fetchTotalBlogs,
+    monthlyStats,
+    categoryStats,
+    totalBlogs,
+  } = useBlogStore();
 
   useEffect(() => {
     getAllBlog();
-    setBlogs(blogs);
+    fetchMonthlyStats();
+    fetchCategoryStats();
+    fetchTotalBlogs();
   }, []);
+
+  useEffect(() => {
+    setBlogs(blogs);
+  }, [blogs]);
+
+  // For the bar chart, use monthlyStats (replace with weekly/yearly if you add those endpoints)
   const data =
-    timeFrame === "weekly"
-      ? weeklyData
-      : timeFrame === "monthly"
-      ? monthlyData
-      : yearlyData;
+    monthlyStats.length > 0
+      ? monthlyStats.map((item, idx) => ({
+          date: item._id ? `Month ${item._id}` : `M${idx + 1}`,
+          external: item.count,
+        }))
+      : [];
+
+  // For the pie chart, use categoryStats
+  const pieData =
+    categoryStats.length > 0
+      ? categoryStats.map((item) => ({
+          name: item._id,
+          value: item.count,
+        }))
+      : [];
+
+  // Pie chart colors
+  const pieCOLORS = [
+    "#e60099",
+    "#0088FE",
+    "#00C49F",
+    "#FFBB28",
+    "#FF8042",
+    "#A28BFE",
+    "#FF6384",
+    "#36A2EB",
+    "#FFCE56",
+    "#4BC0C0",
+  ];
 
   return (
     <div
@@ -57,7 +92,7 @@ const Dashboard = ({ darkMode }) => {
         <AnalyticsCard
           icon={FaRegNewspaper}
           title={"Total blogs"}
-          value={200}
+          value={totalBlogs}
         />
         <AnalyticsCard icon={FaListAlt} title={"Total listing"} value={30} />
       </div>
@@ -65,7 +100,7 @@ const Dashboard = ({ darkMode }) => {
       <div className="flex my-3 lg:my-7">
         <div className="border border-stone-400 rounded-lg w-full h-[280px] lg:h-[300px]  p-5">
           <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-semibold">Site Visits</h2>
+            <h2 className="text-lg font-semibold">Blogs Created (Monthly)</h2>
             <select
               className={`border text-sm lg:text-base lg:p-1 rounded outline-none ${
                 darkMode
@@ -75,9 +110,8 @@ const Dashboard = ({ darkMode }) => {
               value={timeFrame}
               onChange={(e) => setTimeFrame(e.target.value)}
             >
-              <option value="weekly">Weekly</option>
               <option value="monthly">Monthly</option>
-              <option value="yearly">Yearly</option>
+              {/* Add weekly/yearly if you implement those endpoints */}
             </select>
           </div>
           <ResponsiveContainer width="100%" height={200}>
@@ -90,7 +124,7 @@ const Dashboard = ({ darkMode }) => {
                 dataKey="external"
                 barSize={20}
                 fill="#e60099"
-                name="External Views"
+                name="Blogs"
               />
             </BarChart>
           </ResponsiveContainer>
@@ -113,14 +147,17 @@ const Dashboard = ({ darkMode }) => {
               dataKey="value"
             >
               {pieData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={pieCOLORS[index]} />
+                <Cell
+                  key={`cell-${index}`}
+                  fill={pieCOLORS[index % pieCOLORS.length]}
+                />
               ))}
             </Pie>
             <Tooltip />
             <Legend
               formatter={(value) => {
                 const item = pieData.find((d) => d.name === value);
-                return `${value} - ${item.value}`;
+                return `${value} - ${item?.value ?? 0}`;
               }}
             />
           </PieChart>

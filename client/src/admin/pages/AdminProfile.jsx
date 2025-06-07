@@ -25,11 +25,23 @@ const AdminProfile = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-45px)] flex justify-center bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-200">
-      <div className="w-full max-w-md p-8  bg-gray-100 dark:bg-gray-800">
+    <div className="min-h-[100vh] h-full flex justify-center bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-200">
+      <div className="w-full max-w-md p-8 ">
         <div className="flex flex-col items-center">
           <div className="relative">
-            {preview ? (
+            {admin.image ? (
+              <img
+                src={admin.image}
+                alt="Profile"
+                className="w-28 h-28 rounded-full object-cover border-4 border-blue-500"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    admin.name || "User"
+                  )}&background=random&color=ffffff&bold=true&size=128`;
+                }}
+              />
+            ) : preview ? (
               <img
                 src={preview}
                 alt="Profile"

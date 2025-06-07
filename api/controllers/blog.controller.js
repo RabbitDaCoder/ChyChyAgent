@@ -1,7 +1,8 @@
 import Blog from "../models/blog.model.js";
-import CustomError from "../utils/CustomError.js";
+import CustomError from "../utils/customError.js";
 import cloudinary from "../libs/cloudinary.js";
 
+// Create a new blog post
 export const createBlog = async (req, res, next) => {
   try {
     const { title, slug, description, content, tags, category, image } =
@@ -186,6 +187,61 @@ export const uploadBlogImage = async (req, res, next) => {
       }
     );
     result.end(req.file.buffer);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get blog counts per month for the current year
+export const getBlogStatsByMonth = async (req, res, next) => {
+  try {
+    const year = new Date().getFullYear();
+    const stats = await Blog.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+    res.json(stats);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get blog counts per category (for pie chart)
+export const getBlogStatsByCategory = async (req, res, next) => {
+  try {
+    const stats = await Blog.aggregate([
+      {
+        $group: {
+          _id: "$category",
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { count: -1 } },
+    ]);
+    res.json(stats);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get total number of blogs
+export const getTotalBlogs = async (req, res, next) => {
+  try {
+    const total = await Blog.countDocuments();
+    res.json({ total });
   } catch (error) {
     next(error);
   }

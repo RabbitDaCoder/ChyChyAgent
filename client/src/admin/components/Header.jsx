@@ -11,10 +11,12 @@ const Header = ({ darkMode }) => {
   };
 
   const { logout, user } = useUserStore();
-  // Use user.profileImage if available, else fallback
   const profileImg =
-    user?.image ||
-    "https://t3.ftcdn.net/jpg/06/33/54/78/360_F_633547842_AugYzexTpMJ9z1YcpTKUBoqBF0CUCk10.jpg";
+    user?.image && user.image.trim() !== ""
+      ? user.image
+      : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+          user?.name || "User"
+        )}&background=random&color=ffffff&bold=true&size=128`;
 
   return (
     <div
@@ -29,6 +31,12 @@ const Header = ({ darkMode }) => {
           alt="Profile"
           className="rounded-full w-[50px] h-[50px] cursor-pointer object-cover"
           onClick={toggleDropDown}
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+              user?.name || "User"
+            )}&background=random&color=ffffff&bold=true&size=128`;
+          }}
         />
         {dropdownOpen && (
           <ul

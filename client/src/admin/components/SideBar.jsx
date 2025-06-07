@@ -22,8 +22,11 @@ const Sidebar = ({ darkMode, toggleDarkMode }) => {
   };
   const { user } = useUserStore();
   const profileImg =
-    user?.image ||
-    "https://t3.ftcdn.net/jpg/06/33/54/78/360_F_633547842_AugYzexTpMJ9z1YcpTKUBoqBF0CUCk10.jpg";
+    user?.image && user.image.trim() !== ""
+      ? user.image
+      : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+          user?.name || "User"
+        )}&background=random&color=ffffff&bold=true&size=128`;
 
   return (
     <div
@@ -163,6 +166,12 @@ const Sidebar = ({ darkMode, toggleDarkMode }) => {
             src={profileImg}
             alt="User"
             className="rounded-full w-[50px] h-[50px] lg:w-[40px] lg:h-[40px] object-cover"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                user?.name || "User"
+              )}&background=random&color=ffffff&bold=true&size=128`;
+            }}
           />
           {isOpen && (
             <div className="">

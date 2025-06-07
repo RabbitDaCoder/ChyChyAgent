@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
-import CustomError from "../utils/CustomError.js";
+import CustomError from "../utils/customError.js";
 
 export const adminRoute = async (req, res, next) => {
   if (req.user && req.user.role === "admin") {

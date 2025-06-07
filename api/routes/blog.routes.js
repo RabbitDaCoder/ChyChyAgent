@@ -9,6 +9,9 @@ import {
   getSingleBlog,
   toggleFeaturedBlog,
   uploadBlogImage,
+  getBlogStatsByMonth,
+  getBlogStatsByCategory,
+  getTotalBlogs,
 } from "../controllers/blog.controller.js";
 import { adminRoute, protectedRoute } from "../middlewares/auth.middleware.js";
 import { validateBlog } from "../middlewares/validation.middleware.js";
@@ -34,5 +37,8 @@ router.get("/:id", getSingleBlog);
 router.get("/category/:category", getBlogByCategory);
 router.get("/recommendations", getFeaturedBlogs);
 router.post("/upload-image", upload.single("image"), uploadBlogImage);
+router.get("/stats/month", getBlogStatsByMonth);
+router.get("/stats/category", getBlogStatsByCategory);
+router.get("/stats/total", getTotalBlogs);
 
 export default router;

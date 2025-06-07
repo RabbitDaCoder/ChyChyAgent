@@ -5,6 +5,10 @@ import { toast } from "react-toastify";
 export const useBlogStore = create((set) => ({
   blogs: [],
   loading: false,
+  monthlyStats: [],
+  categoryStats: [],
+  visits: [],
+  totalBlogs: 0,
 
   setBlogs: (blogs) => set({ blogs }),
 
@@ -46,10 +50,10 @@ export const useBlogStore = create((set) => ({
       set({ blogs: res.data.blogs, loading: false });
     } catch (error) {
       set({ error: "Failed to fetch Blogs", loading: false });
-      toast.error(
-        blogs.length === 0
+      toast.error((state) =>
+        state.blogs.length === 0
           ? "No Blogs found"
-          : error.response.data.error || "Failed to fetch Blogs"
+          : error.response?.data?.error || "Failed to fetch Blogs"
       );
     }
   },
@@ -95,23 +99,39 @@ export const useBlogStore = create((set) => ({
       );
     }
   },
-  editBlog: async (id, blogData = {}) => {
+  fetchMonthlyStats: async () => {
+    set({ loading: true });
     try {
-      if (!id || Object.keys(blogData).length === 0) {
-        throw new Error("Invalid blog data provided");
-      }
-
-      const res = await axios.patch(`/blog/edit/${id}`, blogData);
-
-      set((prevState) => ({
-        blog: prevState.blog.map((b) => (b.id === id ? res.data.blog : b)),
-        loading: false,
-      }));
-
-      toast.success(res.data.message || "Blog Edited successfully");
+      const res = await axios.get("/blog/stats/month");
+      set({ monthlyStats: res.data, loading: false });
     } catch (error) {
-      set({ error: "Failed to Edit Blog", loading: false });
-      toast.error(error.response?.data?.error || "Failed to Edit Blog");
+      set({ loading: false });
+      toast.error("Failed to fetch monthly stats");
+      console.log("Error fetching monthly stats:", error);
+    }
+  },
+
+  fetchCategoryStats: async () => {
+    set({ loading: true });
+    try {
+      const res = await axios.get("/blog/stats/category");
+      set({ categoryStats: res.data, loading: false });
+    } catch (error) {
+      set({ loading: false });
+      toast.error("Failed to fetch category stats");
+      console.log("Error fetching category stats:", error);
+    }
+  },
+
+  fetchTotalBlogs: async () => {
+    set({ loading: true });
+    try {
+      const res = await axios.get("/blog/stats/total");
+      set({ totalBlogs: res.data.total, loading: false });
+    } catch (error) {
+      set({ loading: false });
+      toast.error("Failed to fetch total blogs");
+      console.log("Error fetching total blogs:", error);
     }
   },
 }));

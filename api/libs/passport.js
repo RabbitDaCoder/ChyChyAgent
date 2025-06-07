@@ -32,7 +32,12 @@ passport.use(
             name: profile.displayName,
             email: profile.emails[0].value,
             googleId: profile.id,
-            image: profile.photos?.[0]?.value,
+            image:
+              profile.photos && profile.photos[0] && profile.photos[0].value
+                ? profile.photos[0].value
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                    profile.displayName
+                  )}&background=random&color=ffffff&bold=true&size=128`,
             password: Math.random().toString(36), // random password, not used
           });
         }
