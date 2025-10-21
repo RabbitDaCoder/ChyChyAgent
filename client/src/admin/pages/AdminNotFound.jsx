@@ -1,4 +1,3 @@
-import React from "react";
 import { Link } from "react-router-dom";
 import notFoundImg from "../../assets/404-img.png";
 import { motion } from "framer-motion";
@@ -17,10 +16,10 @@ const AdminNotFound = () => {
         className="max-w-full h-[300px] mb-4"
       />
       <h1 className="text-4xl font-bold text-gray-800 mb-4">
-        Oops! Page Not Found
+        Hello Admin <br /> Oops! Page Not Found
       </h1>
       <p className="text-lg text-gray-600 mb-4">
-        The page you're looking for doesn't exist or has been moved.
+        The page you&apos;re looking for doesn&apos;t exist or has been moved.
       </p>
       <Link
         to="/admin/login"

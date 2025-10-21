@@ -78,7 +78,15 @@ export const editBlog = async (req, res, next) => {
 
     const updatedBlog = await Blog.findByIdAndUpdate(
       id,
-      { title, description, content, image: updatedImage, tags, category },
+      {
+        title,
+        slug,
+        description,
+        content,
+        image: updatedImage,
+        tags,
+        category,
+      },
       { new: true, runValidators: true }
     );
 
