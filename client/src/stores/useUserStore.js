@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import axios from "../../src/utils/axios";
+import api from "../utils/api";
 import { toast } from "react-toastify";
 
 export const useUserStore = create((set, get) => ({
@@ -11,7 +11,7 @@ export const useUserStore = create((set, get) => ({
     set({ loading: true });
 
     try {
-      const res = await axios.post("/auth/signup", {
+      const res = await api.post("/auth/register", {
         name,
         password,
         email,
@@ -29,32 +29,27 @@ export const useUserStore = create((set, get) => ({
     set({ loading: true });
 
     try {
-      const res = await axios.post(
-        "/auth/login",
-        { password, email },
-        { withCredentials: true }
-      );
+      const res = await api.post("/auth/login", { password, email });
 
-      set({ user: res.data, loading: false });
-      document.cookie = `accessToken=${res.data.accessToken}; path=/;`;
+      set({ user: res.data.data, loading: false });
       navigate("/admin/dashboard");
       toast.success("User logged in successfully");
     } catch (error) {
       set({ loading: false });
       toast.error(
-        error.response?.data?.message || "An error occurred, try again"
+        error.response?.data?.error?.message || "An error occurred, try again",
       );
     }
   },
 
   logout: async (navigate) => {
     try {
-      await axios.post("/auth/logout");
+      await api.post("/auth/logout");
       set({ user: null });
       if (navigate) navigate("/admin/login");
     } catch (error) {
       toast.error(
-        error.response?.data?.message || "An error occurred during logout"
+        error.response?.data?.message || "An error occurred during logout",
       );
       set({ user: null });
       if (navigate) navigate("/admin/login");
@@ -68,8 +63,7 @@ export const useUserStore = create((set, get) => ({
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await axios.post("/auth/upload-image", formData, {
-        withCredentials: true,
+      const res = await api.post("/auth/upload-image", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -89,8 +83,8 @@ export const useUserStore = create((set, get) => ({
   checkAuth: async () => {
     set({ checkingAuth: true });
     try {
-      const response = await axios.get("/auth/profile");
-      set({ user: response.data, checkingAuth: false });
+      const response = await api.get("/auth/me");
+      set({ user: response.data.data, checkingAuth: false });
     } catch (error) {
       console.log(error.message);
       set({ checkingAuth: false, user: null });
@@ -98,12 +92,11 @@ export const useUserStore = create((set, get) => ({
   },
 
   refreshToken: async () => {
-    // Prevent multiple simultaneous refresh attempts
     if (get().checkingAuth) return;
 
     set({ checkingAuth: true });
     try {
-      const response = await axios.post("/auth/refresh-token");
+      const response = await api.post("/auth/refresh");
       set({ checkingAuth: false });
       return response.data;
     } catch (error) {
@@ -111,45 +104,45 @@ export const useUserStore = create((set, get) => ({
       throw error;
     }
   },
-
-  getGoogleOAuthUrl: () => {
-    // Remove trailing /api/v1 if present
-    let base = axios.defaults.baseURL || "";
-    base = base.replace(/\/api\/v1$/, "");
-    return `${base}/api/v1/auth/google`;
-  },
 }));
 
 // Axios interceptor for token refresh
 let refreshPromise = null;
 
-axios.interceptors.response.use(
+api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // Don't intercept auth routes — let login/logout handle their own errors
+    if (
+      originalRequest.url?.includes("/auth/login") ||
+      originalRequest.url?.includes("/auth/register")
+    ) {
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
-        // If a refresh is already in progress, wait for it to complete
         if (refreshPromise) {
           await refreshPromise;
-          return axios(originalRequest);
+          return api(originalRequest);
         }
 
-        // Start a new refresh process
         refreshPromise = useUserStore.getState().refreshToken();
         await refreshPromise;
         refreshPromise = null;
 
-        return axios(originalRequest);
+        return api(originalRequest);
       } catch (refreshError) {
-        // If refresh fails, redirect to login or handle as needed
+        refreshPromise = null;
         useUserStore.getState().logout();
         window.location.href = "/admin/login";
         return Promise.reject(refreshError);
       }
     }
     return Promise.reject(error);
-  }
+  },
 );

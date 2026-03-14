@@ -1,51 +1,33 @@
 import jwt from "jsonwebtoken";
-import User from "../models/user.model.js";
+import User from "../models/User.model.js";
 import CustomError from "../utils/customError.js";
-
-export const adminRoute = async (req, res, next) => {
-  if (req.user && req.user.role === "admin") {
-    return next();
-  }
-  throw new CustomError("Access denied - Admin Only", 403);
-};
 
 export const protectedRoute = async (req, res, next) => {
   try {
-    const accessToken = req.cookies?.accessToken;
+    const authHeader = req.headers.authorization;
+    const bearerToken = authHeader?.startsWith("Bearer ")
+      ? authHeader.split(" ")[1]
+      : null;
+    const cookieToken = req.cookies?.accessToken;
+    const token = bearerToken || cookieToken;
 
-    if (!accessToken) {
-      return res
-        .status(401)
-        .json({ error: "Unauthorized - No access token provided." });
+    if (!token) {
+      throw new CustomError("Unauthorized - No access token provided.", 401);
     }
 
-    try {
-      const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
-      const user = await User.findById(decoded.userId).select("-password");
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const user = await User.findById(decoded.userId).select("-password");
 
-      if (!user) {
-        return res
-          .status(401)
-          .json({ error: "Unauthorized - User not found." });
-      }
-
-      req.user = user;
-      next();
-    } catch (error) {
-      console.error("JWT Verification Error:", error.message);
-
-      if (error.name === "TokenExpiredError") {
-        return res.status(401).json({
-          error: "Unauthorized - Token expired. Please refresh your token.",
-        });
-      }
-
-      return res
-        .status(401)
-        .json({ error: "Unauthorized - Invalid access token." });
+    if (!user) {
+      throw new CustomError("Unauthorized - User not found.", 401);
     }
+
+    req.user = user;
+    return next();
   } catch (error) {
-    console.error("Error in protectedRoute middleware:", error.message);
-    next(error); // Pass error to global error handler
+    if (error.name === "TokenExpiredError") {
+      return next(new CustomError("Unauthorized - Token expired.", 401));
+    }
+    return next(error);
   }
 };

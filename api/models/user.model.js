@@ -22,21 +22,25 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: function () {
         return `https://ui-avatars.com/api/?name=${encodeURIComponent(
-          this.name
+          this.name,
         )}&background=random&color=ffffff&bold=true&size=128`;
       },
     },
     role: {
       type: String,
-      enum: ["user", "admin"],
+      enum: ["superadmin", "admin"],
       default: "admin",
+    },
+    suspended: {
+      type: Boolean,
+      default: false,
     },
     googleId: {
       type: String,
       default: null,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // pre-save hook for hashing the password before user / admin save to DB

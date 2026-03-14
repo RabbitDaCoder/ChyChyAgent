@@ -1,52 +1,71 @@
 import express from "express";
-import donenv from "dotenv";
+import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import { connectDB } from "./libs/db.js";
-import passport from "./libs/passport.js";
-import session from "express-session";
-// imported Routes
+
+// Routes
 import authRoute from "./routes/auth.routes.js";
 import blogRoute from "./routes/blog.routes.js";
-import aiBlogRoute from "./routes/AI.blog.routes.js";
-import errorMiddleware from "./middlewares/errorMiddleware.js";
-donenv.config();
+import listingRoute from "./routes/listing.routes.js";
+import insuranceRoute from "./routes/insurance.routes.js";
+import aiRoute from "./routes/ai.routes.js";
+import contactRoute from "./routes/contact.routes.js";
+import adminRoute from "./routes/admin.routes.js";
+import sitemapRoute from "./routes/sitemap.routes.js";
 
-// express app
+import errorHandler from "./middlewares/errorHandler.middleware.js";
+
+dotenv.config();
+
 const app = express();
 
-// middlewares
-app.use(express.json({ limit: "100mb" }));
+const limiter = rateLimit({ windowMs: 60 * 1000, max: 100 });
+const authLimiter = rateLimit({ windowMs: 60 * 1000, max: 10 });
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: {
+    success: false,
+    error: {
+      message: "Too many AI requests. Wait a moment.",
+      code: "AI_RATE_LIMITED",
+    },
+  },
+});
+
+app.use(helmet());
+app.use(limiter);
+app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 app.use(
   cors({
     origin: process.env.CLIENT_URL,
     credentials: true,
-  })
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  }),
 );
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-  })
-);
-app.use(passport.initialize());
-app.use(passport.session());
 
 // Routes
-app.use("/api/v1/auth", authRoute);
-app.use("/api/v1/blog", blogRoute);
-app.use("/api/v1/Aiblog", aiBlogRoute);
+app.use("/", sitemapRoute);
+app.use("/api/v1/auth", authLimiter, authRoute);
+app.use("/api/v1/blogs", blogRoute);
+app.use("/api/v1/listings", listingRoute);
+app.use("/api/v1/insurance", insuranceRoute);
+app.use("/api/v1/ai", aiLimiter, aiRoute);
+app.use("/api/v1/contact", contactRoute);
+app.use("/api/v1/admins", adminRoute);
 
-// custom middlewares
-app.use(errorMiddleware);
+// error handler
+app.use(errorHandler);
 
-// Port
 const PORT = process.env.PORT || 5000;
 
-// Server Running
-app.listen(PORT, () => {
-  console.log(`Server is running on port http://localhost:${PORT}`);
-  connectDB();
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    // eslint-disable-next-line no-console
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
 });

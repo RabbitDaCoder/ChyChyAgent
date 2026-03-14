@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import axios from "../utils/axios";
+import api from "../utils/api";
 import { toast } from "react-toastify";
 
 export const useBlogStore = create((set) => ({
@@ -24,7 +24,7 @@ export const useBlogStore = create((set) => ({
     set({ loading: true });
 
     try {
-      const res = await axios.post("/blog", {
+      const res = await api.post("/blogs", {
         title,
         slug,
         description,
@@ -46,8 +46,8 @@ export const useBlogStore = create((set) => ({
   getAllBlog: async () => {
     set({ loading: true });
     try {
-      const res = await axios.get("/blog");
-      set({ blogs: res.data.blogs, loading: false });
+      const res = await api.get("/blogs");
+      set({ blogs: res.data.data.blogs || res.data.data || [], loading: false });
     } catch (error) {
       set({ error: "Failed to fetch Blogs", loading: false });
       toast.error((state) =>
@@ -60,8 +60,8 @@ export const useBlogStore = create((set) => ({
   // get by id (single blog)
   getById: async (blogId) => {
     try {
-      const res = await axios.get(`/blog/${blogId}`);
-      set({ blog: res.data.blog, loading: false });
+      const res = await api.get(`/blogs/${blogId}`);
+      set({ blog: res.data.data, loading: false });
     } catch (error) {
       set({ error: "Failed to fetch single Blog", loading: false });
       toast.error(error.response.data.error || "Failed to fetch single Blogs");
@@ -69,7 +69,7 @@ export const useBlogStore = create((set) => ({
   },
   deleteBlog: async (id) => {
     try {
-      const res = await axios.delete(`/blog/delete/${id}`);
+      const res = await api.delete(`/blogs/${id}`);
       set((prevState) => ({
         blogs: prevState.blogs.filter((blog) => blog._id !== id),
       }));
@@ -81,7 +81,7 @@ export const useBlogStore = create((set) => ({
   },
   toggleFeaturedBlog: async (id) => {
     try {
-      const res = await axios.patch(`/blog/${id}`);
+      const res = await api.patch(`/blogs/${id}/feature`);
       // this will update the isFeatured prop of the blog
       set((prevProducts) => ({
         products: prevProducts.products.map((product) =>
@@ -102,7 +102,7 @@ export const useBlogStore = create((set) => ({
   fetchMonthlyStats: async () => {
     set({ loading: true });
     try {
-      const res = await axios.get("/blog/stats/month");
+      const res = await api.get("/blogs/stats/month");
       set({ monthlyStats: res.data, loading: false });
     } catch (error) {
       set({ loading: false });
@@ -114,7 +114,7 @@ export const useBlogStore = create((set) => ({
   fetchCategoryStats: async () => {
     set({ loading: true });
     try {
-      const res = await axios.get("/blog/stats/category");
+      const res = await api.get("/blogs/stats/category");
       set({ categoryStats: res.data, loading: false });
     } catch (error) {
       set({ loading: false });
@@ -126,8 +126,8 @@ export const useBlogStore = create((set) => ({
   fetchTotalBlogs: async () => {
     set({ loading: true });
     try {
-      const res = await axios.get("/blog/stats/total");
-      set({ totalBlogs: res.data.total, loading: false });
+      const res = await api.get("/blogs/stats/total");
+      set({ totalBlogs: res.data.data?.total || res.data.total, loading: false });
     } catch (error) {
       set({ loading: false });
       toast.error("Failed to fetch total blogs");

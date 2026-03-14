@@ -1,73 +1,97 @@
-@import url("https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600&family=Pacifico&family=Lobster&family=Oswald:wght@400;700&family=Montserrat:wght@400;700&family=Bebas+Neue&family=Merriweather:wght@300;700&family=Lora:wght@400;700&family=Playfair+Display:wght@400;700&display=swap");
-
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
-* {
-  @apply font-openSans;
-}
-body {
-  @apply w-full h-full;
+:root {
+  --color-background: #fdfaf7;
+  --color-surface: #ffffff;
+  --color-surface-soft: #fff5f0;
+  --color-border: #ede8e3;
+
+  --color-primary: #c9896b;
+  --color-primary-dark: #a86d52;
+  --color-primary-light: #f0d5c8;
+
+  --color-accent: #d4af82;
+  --color-accent-soft: #f7efe3;
+
+  --color-text-primary: #2c1f1a;
+  --color-text-muted: #8a7468;
+  --color-text-light: #b5a49c;
+
+  --color-success: #7ba05b;
+  --color-error: #c0504d;
+  --color-warning: #d4933a;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 32px;
+  --radius-pill: 9999px;
+
+  --shadow-soft: 0 2px 20px rgba(201, 137, 107, 0.08);
+  --shadow-card: 0 4px 32px rgba(44, 31, 26, 0.06);
+  --shadow-hover: 0 8px 48px rgba(44, 31, 26, 0.12);
 }
 
-/* Custom Scrollbar */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: "DM Sans", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+::selection {
+  background: var(--color-primary-light);
+  color: var(--color-text-primary);
+}
+
 @layer utilities {
   .scrollbar-thin::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
+    width: 6px;
+    height: 6px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-track {
-    background: #e5e7eb; /* Gray-200 */
+    background: var(--color-surface-soft);
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: #6b7280; /* Gray-500 */
-    border-radius: 6px;
+    background: var(--color-primary);
+    border-radius: 9999px;
   }
 
   .scrollbar-none::-webkit-scrollbar {
     display: none;
   }
+
   td {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 200px; /* Adjust width */
+    max-width: 200px;
   }
 }
 
-/* Default font for the editor */
+/* Quill base font */
 .ql-container {
-  font-family: "Montserrat", sans-serif;
-}
-
-/* Custom styles for fonts */
-.ql-font-dancing-script {
-  font-family: "Dancing Script", cursive;
-}
-.ql-font-pacifico {
-  font-family: "Pacifico", cursive;
-}
-.ql-font-lobster {
-  font-family: "Lobster", cursive;
-}
-.ql-font-oswald {
-  font-family: "Oswald", sans-serif;
-}
-.ql-font-montserrat {
-  font-family: "Montserrat", sans-serif;
-}
-.ql-font-bebas-neue {
-  font-family: "Bebas Neue", sans-serif;
-}
-.ql-font-merriweather {
-  font-family: "Merriweather", serif;
-}
-.ql-font-lora {
-  font-family: "Lora", serif;
-}
-.ql-font-playfair {
-  font-family: "Playfair Display", serif;
+  font-family: "DM Sans", sans-serif;
 }

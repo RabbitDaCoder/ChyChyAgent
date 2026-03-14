@@ -1,202 +1,140 @@
-# ChyChy Agent Platform
+# ChyChyAgent
 
-A full-stack platform for managing blogs, admin dashboards, and AI-powered content, built with React (Vite) for the frontend and Node.js/Express/MongoDB for the backend.
+Real estate and insurance platform for **Eloike Maryann** (Maryann Chieboam Eloike) — a Lagos-based advisor with 15+ years of industry experience across AIICO Insurance and AY Housing.
 
----
+Built with the MERN stack (MongoDB, Express, React, Node.js), AI-assisted blog workflow (Groq), Cloudinary for assets, and Redis for refresh tokens.
 
-## 📁 Folder Structure
+## Tech Stack
+
+| Layer    | Stack                                                 |
+| -------- | ----------------------------------------------------- |
+| Frontend | React 18, Vite, Tailwind CSS, Framer Motion, Zustand  |
+| Backend  | Node.js, Express, MongoDB (Mongoose), Redis (ioredis) |
+| Auth     | JWT access + refresh tokens, httpOnly cookies         |
+| Media    | Cloudinary image uploads                              |
+| AI       | Groq API (blog generation, SEO, rewriting)            |
+| Deploy   | Client → Vercel · API → Render                        |
+
+## Project Structure
 
 ```
-Agent_Site/
-│
-├── api/                # Backend (Node.js/Express)
-│   ├── controllers/    # Route controllers (blog, auth, AI, etc.)
-│   ├── libs/           # Utility libraries (db, cloudinary, redis)
-│   ├── middlewares/    # Express middlewares (auth, upload, validation)
-│   ├── models/         # Mongoose models
-│   ├── routes/         # Express routes
-│   ├── utils/          # Utility functions
-│   └── server.js       # Entry point for backend
-│
-├── client/             # Frontend (React + Vite)
-│   ├── public/         # Static assets
-│   ├── src/
-│   │   ├── admin/      # Admin dashboard (pages, components, hooks)
-│   │   ├── assets/     # Images and static files
-│   │   ├── components/ # Shared components
-│   │   ├── context/    # React context providers
-│   │   ├── hooks/      # Custom hooks
-│   │   ├── pages/      # Public pages
-│   │   ├── stores/     # Zustand stores
-│   │   ├── utils/      # Utility functions
-│   │   ├── App.jsx     # Main app component
-│   │   └── main.jsx    # Entry point for React
-│   ├── index.html
-│   ├── package.json
-│   └── vite.config.js
-│
-├── .env                # Environment variables for backend
-├── README.md           # Project documentation
-└── ...
+api/                    # Express backend
+├── controllers/        # Route handlers
+├── libs/               # DB, Redis, Cloudinary config
+├── middlewares/         # Auth, admin, error handling, uploads
+├── models/             # Mongoose schemas (Blog, Listing, Insurance, Contact, User)
+├── routes/             # Express routers
+├── utils/              # Helpers (AppError, asyncHandler, token utils)
+├── seed.js             # Database seed script
+└── server.js           # Entry point
+
+client/                 # Vite + React frontend
+├── src/
+│   ├── components/     # Reusable UI, layout, shared components
+│   ├── data/           # Static data (about.js — owner profile)
+│   ├── hooks/          # Custom hooks (useListings, useBlogs, etc.)
+│   ├── pages/          # Public + admin pages
+│   ├── stores/         # Zustand stores (useUserStore, useBlogStore)
+│   └── utils/          # Axios instance, formatters, schema builders
+└── index.html
 ```
 
----
+## API Routes
 
-## 🚀 Getting Started
+| Prefix              | Description                                   |
+| ------------------- | --------------------------------------------- |
+| `/api/v1/auth`      | Login, logout, refresh, profile, upload image |
+| `/api/v1/blogs`     | CRUD, publish, feature, upload cover          |
+| `/api/v1/listings`  | CRUD, status, feature                         |
+| `/api/v1/insurance` | CRUD insurance plans                          |
+| `/api/v1/contact`   | Submit + admin list/read/delete enquiries     |
+| `/api/v1/ai`        | AI blog generation, SEO, rewriting (admin)    |
+| `/api/v1/admins`    | Manage admins (superadmin only)               |
 
-### 1. **Clone the repository**
+## Design System
 
-```sh
-git clone https://github.com/yourusername/Agent_Site.git
-cd Agent_Site
-```
+- **Display font**: Cormorant Garamond
+- **Body font**: DM Sans
+- **Mono font**: DM Mono
+- **Primary**: Rose gold `#C9896B`
+- **Background**: Ivory `#FDFAF7`
+- **Palette tokens**: Defined in `client/src/index.css` + `tailwind.config.js`
 
-### 2. **Install dependencies**
+## Setup
 
-#### Backend (API)
+### Backend
 
-```sh
+```bash
 cd api
 npm install
+cp .env.example .env   # Fill in values
+npm run dev             # nodemon
 ```
 
-#### Frontend (Client)
+### Frontend
 
-```sh
-cd ../client
+```bash
+cd client
 npm install
+cp .env.example .env   # Set VITE_API_URL, VITE_SITE_URL, VITE_WHATSAPP_NUMBER
+npm run dev             # Vite dev server
 ```
 
-### 3. **Set up environment variables**
+### Seed Database
 
-Create a `.env` file in the `api/` folder with the following (example):
+```bash
+cd api
+node seed.js            # Seeds superadmin, listings, insurance, blogs
+```
 
-```env
+## Environment Variables
+
+### `api/.env`
+
+```
 PORT=5000
-MONGO_URI=your_mongodb_connection_string
-ACCESS_TOKEN_SECRET=your_access_token_secret
-REFRESH_TOKEN_SECRET=your_refresh_token_secret
-CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
-CLOUDINARY_API_KEY=your_cloudinary_api_key
-CLOUDINARY_API_SECRET=your_cloudinary_api_secret
-UPSTASH_REDIS_URL=your_upstash_redis_url
+MONGO_URI=
+JWT_SECRET=
+JWT_REFRESH_SECRET=
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+UPSTASH_REDIS_URL=
 CLIENT_URL=http://localhost:5173
 NODE_ENV=development
-GOOGLE_API_KEY=your_google_api_key
+GROQ_API_KEY=
 ```
 
-### 4. **Start the servers**
+### `client/.env`
 
-#### Backend
-
-```sh
-cd api
-npm run dev
+```
+VITE_API_URL=http://localhost:5000/api/v1
+VITE_SITE_URL=http://localhost:5173
+VITE_WHATSAPP_NUMBER=2348012345678
 ```
 
-#### Frontend
+## Deployment
 
-```sh
-cd ../client
-npm run dev
-```
+| Service | Platform | Config                              |
+| ------- | -------- | ----------------------------------- |
+| Client  | Vercel   | `client/vercel.json` — SPA rewrites |
+| API     | Render   | `render.yaml` — Node web service    |
 
-- The frontend will run at [http://localhost:5173](http://localhost:5173)
-- The backend will run at [http://localhost:5000](http://localhost:5000)
+**Vercel**: Set root directory to `client`, framework preset to Vite, add `VITE_API_URL` pointing to Render API URL.
 
----
+**Render**: Create Web Service from repo, set root to `api`, add all env vars. Set `CLIENT_URL` to the Vercel client URL for CORS.
 
-## 🧪 Testing
+## Key Features
 
-### UI Testing (Cypress)
+- Role-based admin system (superadmin / admin)
+- AI-powered blog generation with Groq
+- Real-time WhatsApp integration for enquiries
+- Cloudinary image management
+- Calendly consultation booking (popup widget)
+- SEO with structured data (JSON-LD schemas)
+- Comprehensive About page with career timeline, stats, gallery
+- Owner profile: Maryann Chieboam Eloike — 15 years across AIICO Insurance (10 years) and AY Housing (5 years)
 
-1. **Install Cypress in the client:**
+## License
 
-   ```sh
-   cd client
-   npm install --save-dev cypress
-   ```
-
-2. **Open Cypress UI:**
-
-   ```sh
-   npx cypress open
-   ```
-
-   - Write your tests in `client/cypress/e2e/`
-   - Example test file: `client/cypress/e2e/blog.cy.js`
-
-3. **Run Cypress tests in headless mode:**
-   ```sh
-   npx cypress run
-   ```
-
-### API Testing (Recommended: Jest + Supertest)
-
-1. **Install Jest and Supertest in the api:**
-
-   ```sh
-   cd api
-   npm install --save-dev jest supertest
-   ```
-
-2. **Add a test script to `api/package.json`:**
-
-   ```json
-   "scripts": {
-     "test": "jest"
-   }
-   ```
-
-3. **Write your API tests in `api/tests/` (e.g., `api/tests/blog.test.js`):**
-
-   ```js
-   import request from "supertest";
-   import app from "../server"; // or wherever your Express app is exported
-
-   describe("Blog API", () => {
-     it("should get all blogs", async () => {
-       const res = await request(app).get("/api/v1/blog");
-       expect(res.statusCode).toBe(200);
-       expect(res.body.blogs).toBeInstanceOf(Array);
-     });
-   });
-   ```
-
-4. **Run API tests:**
-   ```sh
-   npm test
-   ```
-
----
-
-## 🛠️ Useful Scripts
-
-| Command            | Location | Description           |
-| ------------------ | -------- | --------------------- |
-| `npm run dev`      | api      | Start backend (dev)   |
-| `npm run dev`      | client   | Start frontend (dev)  |
-| `npx cypress open` | client   | Open Cypress UI       |
-| `npx cypress run`  | client   | Run Cypress tests     |
-| `npm test`         | api      | Run backend API tests |
-
----
-
-## 📝 Notes
-
-- **Frontend** uses Zustand for state management, React Router for routing, and React Toastify for notifications.
-- **Backend** uses Express, Mongoose, JWT authentication, Cloudinary for image uploads, and Redis for refresh token storage.
-- **Environment variables** must be set for both MongoDB, Cloudinary, Redis, and Google AI API.
-- **CORS** is configured to allow frontend-backend communication in development.
-
----
-
-## 🤝 Contributing
-
-Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
-
----
-
-## 📄 License
-
-[MIT](LICENSE)
+ISC
