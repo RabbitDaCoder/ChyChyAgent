@@ -1,26 +1,29 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Groq from "groq-sdk";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-if (!process.env.GOOGLE_API_KEY) {
-  throw new Error("GOOGLE_API_KEY is not set in environment");
+if (!process.env.GROQ_API_KEY) {
+  throw new Error("GROQ_API_KEY is not set in environment");
 }
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-// gemini-2.5-flash: fastest model, highest free tier quota
-const geminiModel = genAI.getGenerativeModel({
-  model: "gemini-2.5-flash",
-  generationConfig: {
-    temperature: 0.8,
-    topK: 40,
-    topP: 0.95,
-    maxOutputTokens: 4096,
-  },
-});
+/**
+ * Send a prompt to Groq and return the text response.
+ * Uses llama-3.3-70b-versatile for quality output.
+ */
+export async function chatCompletion(
+  prompt,
+  { temperature = 0.7, maxTokens = 4096 } = {},
+) {
+  const response = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    messages: [{ role: "user", content: prompt }],
+    temperature,
+    max_tokens: maxTokens,
+  });
+  return response.choices[0]?.message?.content || "";
+}
 
-// Backwards compatibility with previous import name
-const model = geminiModel;
-
-export { geminiModel, model };
+export default groq;

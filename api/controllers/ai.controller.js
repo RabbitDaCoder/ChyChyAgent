@@ -1,12 +1,12 @@
-import { geminiModel } from "../libs/ai.js";
+import { chatCompletion } from "../libs/ai.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import apiResponse from "../utils/apiResponse.js";
 import AppError from "../utils/AppError.js";
 import Blog from "../models/Blog.model.js";
 import slugify from "slugify";
 
-// Gemini sometimes wraps JSON in markdown code fences; strip them first
-const parseGeminiJSON = (text) => {
+// Groq/LLM sometimes wraps JSON in markdown code fences; strip them first
+const parseLLMJSON = (text) => {
   const cleaned = text
     .replace(/^```json\s*/i, "")
     .replace(/^```\s*/i, "")
@@ -20,7 +20,11 @@ const parseGeminiJSON = (text) => {
 };
 
 const estimateReadTime = (htmlContent) => {
-  const wordCount = htmlContent?.replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length || 0;
+  const wordCount =
+    htmlContent
+      ?.replace(/<[^>]+>/g, " ")
+      .split(/\s+/)
+      .filter(Boolean).length || 0;
   return Math.max(1, Math.ceil(wordCount / 200));
 };
 
@@ -44,9 +48,8 @@ Format the response as JSON:
 Return only valid JSON. No markdown. No preamble.`;
 
   try {
-    const result = await geminiModel.generateContent(prompt);
-    const text = result?.response?.text();
-    const data = parseGeminiJSON(text);
+    const text = await chatCompletion(prompt);
+    const data = parseLLMJSON(text);
     return apiResponse.success(res, data);
   } catch (err) {
     throw new AppError("AI generation failed", 500, "AI_ERROR");
@@ -60,9 +63,8 @@ export const suggestTitles = asyncHandler(async (req, res) => {
   const prompt = `Suggest ${count} compelling blog post titles about ${topic} for a Nigerian real estate and insurance agency. Return only a JSON array of strings. No markdown. No explanation.`;
 
   try {
-    const result = await geminiModel.generateContent(prompt);
-    const text = result?.response?.text();
-    const data = parseGeminiJSON(text);
+    const text = await chatCompletion(prompt);
+    const data = parseLLMJSON(text);
     return apiResponse.success(res, data);
   } catch (err) {
     throw new AppError("AI generation failed", 500, "AI_ERROR");
@@ -71,7 +73,8 @@ export const suggestTitles = asyncHandler(async (req, res) => {
 
 export const rewriteContent = asyncHandler(async (req, res) => {
   const { content, instruction } = req.body;
-  if (!content) throw new AppError("Content is required", 400, "VALIDATION_ERROR");
+  if (!content)
+    throw new AppError("Content is required", 400, "VALIDATION_ERROR");
 
   const prompt = `Rewrite the following blog content to be more ${
     instruction || "engaging, clear, and professional"
@@ -80,8 +83,7 @@ Content: ${content}
 Return only the rewritten HTML content. No preamble. No explanation.`;
 
   try {
-    const result = await geminiModel.generateContent(prompt);
-    const text = result?.response?.text() || "";
+    const text = await chatCompletion(prompt);
     return apiResponse.success(res, { content: text });
   } catch (err) {
     throw new AppError("AI generation failed", 500, "AI_ERROR");
@@ -91,7 +93,11 @@ Return only the rewritten HTML content. No preamble. No explanation.`;
 export const generateSeoMeta = asyncHandler(async (req, res) => {
   const { title, content } = req.body;
   if (!title || !content)
-    throw new AppError("Title and content are required", 400, "VALIDATION_ERROR");
+    throw new AppError(
+      "Title and content are required",
+      400,
+      "VALIDATION_ERROR",
+    );
 
   const summary = content.slice(0, 500);
   const prompt = `Generate SEO metadata for a blog post.
@@ -105,9 +111,8 @@ Return only JSON:
 No markdown. No preamble.`;
 
   try {
-    const result = await geminiModel.generateContent(prompt);
-    const text = result?.response?.text();
-    const data = parseGeminiJSON(text);
+    const text = await chatCompletion(prompt);
+    const data = parseLLMJSON(text);
     return apiResponse.success(res, data);
   } catch (err) {
     throw new AppError("AI generation failed", 500, "AI_ERROR");
@@ -116,14 +121,14 @@ No markdown. No preamble.`;
 
 export const summarizeContent = asyncHandler(async (req, res) => {
   const { content } = req.body;
-  if (!content) throw new AppError("Content is required", 400, "VALIDATION_ERROR");
+  if (!content)
+    throw new AppError("Content is required", 400, "VALIDATION_ERROR");
 
   const prompt = `Summarize the following blog post content into a compelling 2-sentence excerpt for a real estate and insurance blog. Return only the excerpt text. No quotes. No preamble.
 Content: ${content}`;
 
   try {
-    const result = await geminiModel.generateContent(prompt);
-    const text = result?.response?.text() || "";
+    const text = await chatCompletion(prompt);
     return apiResponse.success(res, { excerpt: text });
   } catch (err) {
     throw new AppError("AI generation failed", 500, "AI_ERROR");
@@ -140,10 +145,16 @@ export const generateBlog = asyncHandler(async (req, res) => {
   } = req.body;
 
   if (!topic || topic.trim().length < 5) {
-    throw new AppError("Please provide a topic of at least 5 characters", 400, "INVALID_TOPIC");
+    throw new AppError(
+      "Please provide a topic of at least 5 characters",
+      400,
+      "INVALID_TOPIC",
+    );
   }
 
-  const keywordLine = keywords.length ? `Naturally include these keywords: ${keywords.join(", ")}.` : "";
+  const keywordLine = keywords.length
+    ? `Naturally include these keywords: ${keywords.join(", ")}.`
+    : "";
 
   const prompt = `
 You are a professional content writer for ChyChyAgent,
@@ -181,33 +192,64 @@ The last character of your response must be }
 
   let parsed;
   try {
-    const result = await geminiModel.generateContent(prompt);
-    const text = result.response.text();
-    parsed = parseGeminiJSON(text);
+    const text = await chatCompletion(prompt, { maxTokens: 4096 });
+    parsed = parseLLMJSON(text);
   } catch (err) {
-    throw new AppError("AI generation failed. Please try again.", 502, "AI_ERROR");
+    throw new AppError(
+      "AI generation failed. Please try again.",
+      502,
+      "AI_ERROR",
+    );
   }
 
-  const required = ["title", "content", "excerpt", "seoTitle", "seoDesc", "tags", "category"];
+  const required = [
+    "title",
+    "content",
+    "excerpt",
+    "seoTitle",
+    "seoDesc",
+    "tags",
+    "category",
+  ];
   for (const field of required) {
     if (!parsed[field]) {
-      throw new AppError(`AI response missing field: ${field}. Try again.`, 502, "AI_INCOMPLETE_RESPONSE");
+      throw new AppError(
+        `AI response missing field: ${field}. Try again.`,
+        502,
+        "AI_INCOMPLETE_RESPONSE",
+      );
     }
   }
 
   parsed.readTime = estimateReadTime(parsed.content);
   parsed.wordCount =
-    parsed.content?.replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length || 0;
+    parsed.content
+      ?.replace(/<[^>]+>/g, " ")
+      .split(/\s+/)
+      .filter(Boolean).length || 0;
 
   return apiResponse.success(res, parsed);
 });
 
 export const saveAsDraft = asyncHandler(async (req, res) => {
-  const { title, content, excerpt, seoTitle, seoDesc, tags, category, readTime, coverImage } =
-    req.body;
+  const {
+    title,
+    content,
+    excerpt,
+    seoTitle,
+    seoDesc,
+    tags,
+    category,
+    readTime,
+    coverImage,
+  } = req.body;
 
   if (!title || !content) {
-    throw new AppError("Title and content are required to save a draft", 400, "MISSING_FIELDS");
+    throw new AppError(
+      "Title and content are required to save a draft",
+      400,
+      "MISSING_FIELDS",
+    );
   }
 
   let slug = slugify(title, { lower: true, strict: true });
@@ -235,11 +277,24 @@ export const saveAsDraft = asyncHandler(async (req, res) => {
 });
 
 export const publishDirectly = asyncHandler(async (req, res) => {
-  const { title, content, excerpt, seoTitle, seoDesc, tags, category, readTime, coverImage } =
-    req.body;
+  const {
+    title,
+    content,
+    excerpt,
+    seoTitle,
+    seoDesc,
+    tags,
+    category,
+    readTime,
+    coverImage,
+  } = req.body;
 
   if (!title || !content) {
-    throw new AppError("Title and content are required to publish", 400, "MISSING_FIELDS");
+    throw new AppError(
+      "Title and content are required to publish",
+      400,
+      "MISSING_FIELDS",
+    );
   }
 
   let slug = slugify(title, { lower: true, strict: true });
