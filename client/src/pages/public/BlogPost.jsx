@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import useBlog from "../../hooks/useBlog";
 import Skeleton from "../../components/ui/Skeleton";
+import { ShareBar } from "../../components/shared/ShareBar";
 
 export default function BlogPost() {
   const { slug } = useParams();
@@ -11,7 +12,7 @@ export default function BlogPost() {
   }
 
   return (
-    <article className="prose prose-lg max-w-4xl py-10">
+    <article className="prose prose-lg max-w-4xl py-10 pb-24 md:pb-0">
       <p className="text-label text-primary">{blog.category}</p>
       <h1 className="font-display text-display-xl text-text-primary">
         {blog.title}
@@ -27,6 +28,13 @@ export default function BlogPost() {
         className="prose text-text-muted"
         dangerouslySetInnerHTML={{ __html: blog.content }}
       />
+
+      {/* Share bar — sits below article body */}
+      {blog && (
+        <div className="not-prose">
+          <ShareBar title={blog.title} slug={slug} excerpt={blog.excerpt} />
+        </div>
+      )}
 
       {/* Author byline */}
       <div className="mt-10 flex items-center gap-4 border-t border-border pt-6 not-prose">

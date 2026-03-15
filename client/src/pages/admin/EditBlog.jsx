@@ -15,9 +15,9 @@ const EditBlog = () => {
   const { getById, blog, editBlog } = useBlogStore();
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
-  const [description, setDescription] = useState("");
+  const [excerpt, setExcerpt] = useState("");
   const [content, setContent] = useState("");
-  const [image, setImage] = useState(null);
+  const [coverImage, setCoverImage] = useState(null);
   const [tags, setTags] = useState([]);
   const [category, setCategory] = useState("real-estate");
   const navigate = useNavigate();
@@ -34,18 +34,24 @@ const EditBlog = () => {
     if (blog) {
       setTitle(blog.title || "");
       setSlug(blog.slug || "");
-      setDescription(blog.description || "");
+      setExcerpt(blog.excerpt || "");
       setContent(blog.content || "");
-      setImage(blog.image ? { preview: blog.image, name: blog.image } : null);
+      setCoverImage(
+        blog.coverImage
+          ? { preview: blog.coverImage, name: blog.coverImage }
+          : null,
+      );
       setTags(blog.tags || []);
       setCategory(blog.category || "real-estate");
       // Save initial blog data for change detection
       initialBlogRef.current = {
         title: blog.title || "",
         slug: blog.slug || "",
-        description: blog.description || "",
+        excerpt: blog.excerpt || "",
         content: blog.content || "",
-        image: blog.image ? { preview: blog.image, name: blog.image } : null,
+        coverImage: blog.coverImage
+          ? { preview: blog.coverImage, name: blog.coverImage }
+          : null,
         tags: blog.tags || [],
         category: blog.category || "real-estate",
       };
@@ -67,16 +73,16 @@ const EditBlog = () => {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImage({
+      setCoverImage({
         preview: URL.createObjectURL(file),
         name: file.name,
-        file, // <-- Store the File object for upload
+        file,
       });
     }
   };
   // Reset preview image
   const handleResetPreview = () => {
-    setImage(null);
+    setCoverImage(null);
   };
 
   // Handle tags
@@ -98,33 +104,33 @@ const EditBlog = () => {
     return (
       title !== initialBlogRef.current.title ||
       slug !== initialBlogRef.current.slug ||
-      description !== initialBlogRef.current.description ||
+      excerpt !== initialBlogRef.current.excerpt ||
       content !== initialBlogRef.current.content ||
       category !== initialBlogRef.current.category ||
       JSON.stringify(tags) !== JSON.stringify(initialBlogRef.current.tags) ||
-      image?.preview !== initialBlogRef.current.image?.preview
+      coverImage?.preview !== initialBlogRef.current.coverImage?.preview
     );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!title || !description || !content) {
+    if (!title || !excerpt || !content) {
       toast.error("Please fill in all required fields");
       return;
     }
 
-    let imageUrl = image;
+    let imageUrl = coverImage;
     // If image is a new file (not just a URL string), upload it
     if (
-      image &&
-      image.preview &&
-      image.name !== initialBlogRef.current?.image?.name
+      coverImage &&
+      coverImage.preview &&
+      coverImage.name !== initialBlogRef.current?.coverImage?.name
     ) {
       try {
         const data = new FormData();
         // You need to keep the actual File object in state if you want to upload it
-        data.append("image", image.file); // <-- Make sure to store the File object in image.file
+        data.append("image", coverImage.file);
         const res = await api.post("/blogs/upload", data, {
           headers: { "Content-Type": "multipart/form-data" },
         });
@@ -134,16 +140,17 @@ const EditBlog = () => {
         toast.error("Image upload failed");
         return;
       }
-    } else if (image && image.preview) {
-      imageUrl = image.preview;
+    } else if (coverImage && coverImage.preview) {
+      imageUrl = coverImage.preview;
     }
 
     const blogData = {
       title,
       slug,
-      description,
+      excerpt,
       content,
-      image: imageUrl,
+      coverImage:
+        typeof imageUrl === "string" ? imageUrl : imageUrl?.preview || "",
       tags,
       category,
     };
@@ -151,7 +158,7 @@ const EditBlog = () => {
     try {
       await editBlog(id, blogData);
       toast.success("Blog updated successfully!");
-      navigate("/admin/");
+      navigate("/admin/blogs");
     } catch (error) {
       console.error("Error updating blog:", error);
       toast.error("Failed to update blog.");
@@ -162,6 +169,7 @@ const EditBlog = () => {
     try {
       await api.patch(`/blogs/${id}/publish`);
       toast.success("Published!");
+      navigate("/admin/blogs");
     } catch (err) {
       toast.error("Failed to publish");
     }
@@ -173,7 +181,9 @@ const EditBlog = () => {
         {blog?.aiGenerated && blog?.status === "draft" && (
           <div className="mb-4 flex items-center gap-3 rounded-md border-l-4 border-accent bg-accent-soft p-3 text-body-sm text-text-primary">
             <Sparkles size={16} />
-            <span>This post was AI-generated. Review the content before publishing.</span>
+            <span>
+              This post was AI-generated. Review the content before publishing.
+            </span>
             <button
               type="button"
               onClick={handlePublishNow}
@@ -183,7 +193,7 @@ const EditBlog = () => {
             </button>
           </div>
         )}
-        <h2 className="text-xl font-bold mb-4">Create Blog Post</h2>
+        <h2 className="text-xl font-bold mb-4">Edit Blog Post</h2>
 
         <label className="block mb-2">Title</label>
         <input
@@ -201,10 +211,10 @@ const EditBlog = () => {
           className="w-full p-2 border rounded text-black outline-none bg-gray-100 dark:bg-gray-500"
         />
 
-        <label className="block mt-4 mb-2">Description</label>
+        <label className="block mt-4 mb-2">Excerpt</label>
         <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          value={excerpt}
+          onChange={(e) => setExcerpt(e.target.value)}
           className="w-full p-2 text-black dark:bg-gray-600 outline-none border rounded"
         />
 
@@ -220,12 +230,12 @@ const EditBlog = () => {
           className="border-2 border-dotted p-6 text-center cursor-pointer"
           onClick={() => document.getElementById("fileInput").click()}
         >
-          {image ? (
+          {coverImage ? (
             <div className="flex flex-col items-center ">
               <div className="relative">
                 <img
-                  src={image.preview}
-                  alt={image.name}
+                  src={coverImage.preview}
+                  alt={coverImage.name}
                   className="lg:w-full lg:h-44 w-full h-36 object-cover rounded-md"
                 />
                 <LiaTimesSolid
@@ -238,7 +248,7 @@ const EditBlog = () => {
                 />
               </div>
 
-              <p className="text-green-600 mt-2">{image.name}</p>
+              <p className="text-green-600 mt-2">{coverImage.name}</p>
             </div>
           ) : (
             <div className="flex flex-col justify-center items-center">

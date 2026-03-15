@@ -6,6 +6,8 @@ import {
   refreshToken,
   getProfile,
   uploadProfileImage,
+  updateProfile,
+  changePassword,
 } from "../controllers/auth.controller.js";
 import { protectedRoute } from "../middlewares/auth.middleware.js";
 
@@ -22,5 +24,7 @@ router.post(
   upload.single("file"),
   uploadProfileImage,
 );
+router.put("/profile", protectedRoute, updateProfile);
+router.put("/change-password", protectedRoute, changePassword);
 
 export default router;

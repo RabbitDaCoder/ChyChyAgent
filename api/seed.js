@@ -285,7 +285,7 @@ const makeBlog = (
   content,
   status,
   featured,
-  authorName: "Eloike Maryann",
+  author: "Eloike Maryann",
   coverImage: "",
   tags: [],
 });

@@ -3,6 +3,7 @@ import {
   getBlogs,
   getFeaturedBlogs,
   getBlog,
+  getBlogById,
   createBlog,
   updateBlog,
   deleteBlog,
@@ -18,6 +19,7 @@ const router = express.Router();
 
 router.get("/", getBlogs);
 router.get("/featured", getFeaturedBlogs);
+router.get("/by-id/:id", getBlogById);
 router.get("/:slug", getBlog);
 
 router.post("/", protectedRoute, requireAdmin, createBlog);
@@ -30,7 +32,7 @@ router.post(
   protectedRoute,
   requireAdmin,
   upload.single("image"),
-  uploadCover
+  uploadCover,
 );
 
 export default router;

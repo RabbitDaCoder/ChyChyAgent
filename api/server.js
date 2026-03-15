@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
+import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 import { connectDB } from "./libs/db.js";
 
@@ -37,6 +38,7 @@ const aiLimiter = rateLimit({
 });
 
 app.use(helmet());
+app.use(morgan("dev"));
 app.use(limiter);
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());

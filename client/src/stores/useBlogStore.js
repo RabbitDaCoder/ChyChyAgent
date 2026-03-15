@@ -15,9 +15,9 @@ export const useBlogStore = create((set) => ({
   createBlog: async ({
     title,
     slug,
-    description,
+    excerpt,
     content,
-    image,
+    coverImage,
     tags,
     category,
   }) => {
@@ -27,44 +27,63 @@ export const useBlogStore = create((set) => ({
       const res = await api.post("/blogs", {
         title,
         slug,
-        description,
+        excerpt,
         content,
-        image,
+        coverImage,
         tags,
         category,
       });
       set((prevState) => ({
-        blogs: [...prevState.blogs, res.data],
+        blogs: [...prevState.blogs, res.data.data || res.data],
         loading: false,
       }));
       toast.success(res.data.message || "Blog created successfully");
     } catch (error) {
-      toast.error(error.response.data.error);
+      toast.error(error.response?.data?.error || "Failed to create blog");
       set({ loading: false });
     }
   },
   getAllBlog: async () => {
     set({ loading: true });
     try {
-      const res = await api.get("/blogs");
-      set({ blogs: res.data.data.blogs || res.data.data || [], loading: false });
+      const res = await api.get("/blogs", { params: { status: "published" } });
+      set({
+        blogs: res.data.data.blogs || res.data.data || [],
+        loading: false,
+      });
     } catch (error) {
       set({ error: "Failed to fetch Blogs", loading: false });
       toast.error((state) =>
         state.blogs.length === 0
           ? "No Blogs found"
-          : error.response?.data?.error || "Failed to fetch Blogs"
+          : error.response?.data?.error || "Failed to fetch Blogs",
       );
     }
   },
   // get by id (single blog)
   getById: async (blogId) => {
+    set({ loading: true });
     try {
-      const res = await api.get(`/blogs/${blogId}`);
+      const res = await api.get(`/blogs/by-id/${blogId}`);
       set({ blog: res.data.data, loading: false });
     } catch (error) {
       set({ error: "Failed to fetch single Blog", loading: false });
-      toast.error(error.response.data.error || "Failed to fetch single Blogs");
+      toast.error(error.response?.data?.error || "Failed to fetch single Blog");
+    }
+  },
+  editBlog: async (id, blogData) => {
+    set({ loading: true });
+    try {
+      const res = await api.put(`/blogs/${id}`, blogData);
+      set((state) => ({
+        blogs: state.blogs.map((b) => (b._id === id ? res.data.data : b)),
+        blog: res.data.data,
+        loading: false,
+      }));
+      return res.data.data;
+    } catch (error) {
+      set({ loading: false });
+      throw error;
     }
   },
   deleteBlog: async (id) => {
@@ -82,12 +101,11 @@ export const useBlogStore = create((set) => ({
   toggleFeaturedBlog: async (id) => {
     try {
       const res = await api.patch(`/blogs/${id}/feature`);
-      // this will update the isFeatured prop of the blog
-      set((prevProducts) => ({
-        products: prevProducts.products.map((product) =>
-          product._id === id
-            ? { ...product, isFeatured: res.data.isFeatured }
-            : product
+      set((state) => ({
+        blogs: state.blogs.map((blog) =>
+          blog._id === id
+            ? { ...blog, featured: res.data.data?.featured ?? !blog.featured }
+            : blog,
         ),
         loading: false,
       }));
@@ -95,7 +113,7 @@ export const useBlogStore = create((set) => ({
     } catch (error) {
       set({ error: "Failed to toggle featured status", loading: false });
       toast.error(
-        error.response.data.error || "Failed to toggle featured status"
+        error.response?.data?.error || "Failed to toggle featured status",
       );
     }
   },
@@ -127,7 +145,10 @@ export const useBlogStore = create((set) => ({
     set({ loading: true });
     try {
       const res = await api.get("/blogs/stats/total");
-      set({ totalBlogs: res.data.data?.total || res.data.total, loading: false });
+      set({
+        totalBlogs: res.data.data?.total || res.data.total,
+        loading: false,
+      });
     } catch (error) {
       set({ loading: false });
       toast.error("Failed to fetch total blogs");

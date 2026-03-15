@@ -14,7 +14,7 @@ const uploadFiles = async (files = []) => {
           .upload(base64, { folder: "chychy_listings" })
           .then((res) => resolve(res.secure_url))
           .catch(reject);
-      })
+      }),
   );
   return Promise.all(uploads);
 };
@@ -84,6 +84,12 @@ export const getListing = asyncHandler(async (req, res) => {
   return apiResponse.success(res, listing);
 });
 
+export const getListingById = asyncHandler(async (req, res) => {
+  const listing = await Listing.findById(req.params.id);
+  if (!listing) throw new AppError("Listing not found", 404, "NOT_FOUND");
+  return apiResponse.success(res, listing);
+});
+
 export const createListing = asyncHandler(async (req, res) => {
   const data = req.body;
   const uploadedImages = await uploadFiles(req.files || []);
@@ -102,7 +108,11 @@ export const updateListing = asyncHandler(async (req, res) => {
   const uploadedImages = await uploadFiles(req.files || []);
   const images = uploadedImages.length ? uploadedImages : listing.images;
 
-  listing.set({ ...req.body, images, coverImage: req.body.coverImage || images[0] });
+  listing.set({
+    ...req.body,
+    images,
+    coverImage: req.body.coverImage || images[0],
+  });
   await listing.save();
   return apiResponse.success(res, listing);
 });

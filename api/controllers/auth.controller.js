@@ -230,3 +230,66 @@ export const refreshToken = async (req, res, next) => {
     next(error);
   }
 };
+
+export const updateProfile = async (req, res, next) => {
+  try {
+    const { name, email } = req.body;
+    const user = await User.findById(req.user._id);
+    if (!user) throw new AppError("User not found", 404, "NOT_FOUND");
+
+    if (email && email !== user.email) {
+      const existing = await User.findOne({ email });
+      if (existing)
+        throw new AppError("Email already in use", 400, "VALIDATION_ERROR");
+      user.email = email;
+    }
+    if (name) user.name = name;
+
+    await user.save();
+    return apiResponse.success(res, {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      image: user.image,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const changePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      throw new AppError(
+        "Both current and new password are required",
+        400,
+        "VALIDATION_ERROR",
+      );
+    }
+    if (newPassword.length < 6) {
+      throw new AppError(
+        "New password must be at least 6 characters",
+        400,
+        "VALIDATION_ERROR",
+      );
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) throw new AppError("User not found", 404, "NOT_FOUND");
+
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch)
+      throw new AppError("Current password is incorrect", 401, "UNAUTHORIZED");
+
+    user.password = newPassword;
+    await user.save();
+
+    return apiResponse.success(res, {
+      message: "Password updated successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};

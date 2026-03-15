@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import { lazy, Suspense, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import { useUserStore } from "./stores/useUserStore";
 import PublicLayout from "./components/layout/PublicLayout";
 import AdminLayout from "./components/layout/AdminLayout";
 import Home from "./pages/public/Home";
@@ -18,10 +19,13 @@ import AdminLogin from "./pages/admin/Login";
 import AdminProfile from "./pages/admin/AdminProfile";
 import AdminProtectedRoute from "./pages/admin/AdminProtectedRoute";
 import ListingsAdmin from "./pages/admin/Listings";
+import CreateListing from "./pages/admin/CreateListing";
+import EditListing from "./pages/admin/EditListing";
 import InsuranceAdmin from "./pages/admin/Insurance";
 import EnquiriesAdmin from "./pages/admin/Enquiries";
 import AIBlogGenerator from "./pages/admin/AIBlogGenerator";
 import ManageAdmins from "./pages/admin/ManageAdmins";
+import Settings from "./pages/admin/Settings";
 
 const About = lazy(() => import("./pages/public/About"));
 const Listings = lazy(() => import("./pages/public/Listings"));
@@ -37,6 +41,12 @@ function ScrollToTop() {
 }
 
 export default function App() {
+  const { checkAuth } = useUserStore();
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
   return (
     <>
       <ScrollToTop />
@@ -68,10 +78,13 @@ export default function App() {
               <Route path="use-AI" element={<AiBlog />} />
               <Route path="profile/:id" element={<AdminProfile />} />
               <Route path="listings" element={<ListingsAdmin />} />
+              <Route path="listings/new" element={<CreateListing />} />
+              <Route path="listings/:id" element={<EditListing />} />
               <Route path="insurance" element={<InsuranceAdmin />} />
               <Route path="enquiries" element={<EnquiriesAdmin />} />
               <Route path="ai-blog" element={<AIBlogGenerator />} />
               <Route path="manage-admins" element={<ManageAdmins />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
           </Route>
 

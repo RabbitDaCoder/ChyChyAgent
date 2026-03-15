@@ -9,7 +9,7 @@ export const getBlogs = asyncHandler(async (req, res) => {
     search,
     limit = 10,
     page = 1,
-    status = "published",
+    status,
     aiGenerated,
   } = req.query;
 
@@ -47,11 +47,16 @@ export const getBlog = asyncHandler(async (req, res) => {
   return apiResponse.success(res, blog);
 });
 
+export const getBlogById = asyncHandler(async (req, res) => {
+  const blog = await Blog.findById(req.params.id);
+  if (!blog) throw new AppError("Blog not found", 404, "NOT_FOUND");
+  return apiResponse.success(res, blog);
+});
+
 export const createBlog = asyncHandler(async (req, res) => {
   const blog = await Blog.create({
     ...req.body,
-    author: req.user._id,
-    authorName: req.user.name,
+    author: req.user?.name || "Eloike Maryann",
   });
   return apiResponse.success(res, blog, 201);
 });

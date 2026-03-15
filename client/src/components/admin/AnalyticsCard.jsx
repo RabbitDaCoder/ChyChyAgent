@@ -2,16 +2,16 @@ import PropTypes from "prop-types";
 
 const AnalyticsCard = ({ title, value, icon: Icon }) => {
   return (
-    <div className="flex gap-10 items-center my-3 lg:my-2 lg:w-full lg:h-full ">
-      <div className="border rounded-lg cursor-pointer flex flex-col items-center px-2 py-4 border-stone-400 w-[130px] h-[100px] lg:w-[200px] lg:h-[90px]">
-        <div className=" flex flex-col lg:flex-row gap-2 items-center text-gray-600">
-          <Icon className="lg:text-xl  dark:text-white" size={17} />{" "}
-          <span className="text-gray-400 text-xs lg:text-start text-center">
-            {title}
-          </span>
+    <div className="rounded-lg border border-border bg-surface p-4 shadow-card">
+      <div className="flex items-center gap-3 text-text-muted">
+        <div className="rounded-full bg-accent-soft p-2">
+          <Icon size={18} className="text-primary" />
         </div>
-        <h1 className="font-extrabold lg:text-xl text-sm">{value}</h1>
+        <span className="text-label">{title}</span>
       </div>
+      <p className="mt-2 font-display text-display-md text-text-primary">
+        {value}
+      </p>
     </div>
   );
 };

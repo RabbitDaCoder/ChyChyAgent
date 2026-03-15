@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { MdOutlineDeleteSweep } from "react-icons/md";
 import { FaEdit, FaRegStar, FaStar } from "react-icons/fa";
@@ -10,34 +10,32 @@ import api from "../../utils/api";
 const BlogList = () => {
   const [blog, setBlogs] = useState([]);
   const [tab, setTab] = useState("all");
+  const [loading, setLoading] = useState(true);
 
-  const { getAllBlog, blogs, deleteBlog, toggleFeaturedBlog } = useBlogStore();
+  const { deleteBlog, toggleFeaturedBlog } = useBlogStore();
+
+  const fetchBlogs = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params =
+        tab === "ai"
+          ? { status: "draft", aiGenerated: true, limit: 50 }
+          : { limit: 50 };
+      const res = await api.get("/blogs", { params });
+      setBlogs(res.data.data.blogs || res.data.data || []);
+    } catch {
+      setBlogs([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [tab]);
 
   useEffect(() => {
-    getAllBlog();
-    setBlogs(blogs);
-  }, [blogs]);
-
-  useEffect(() => {
-    const fetchTabData = async () => {
-      if (tab === "ai") {
-        try {
-          const res = await api.get("/blogs", {
-            params: { status: "draft", aiGenerated: true, limit: 50 },
-          });
-          setBlogs(res.data.data.blogs || res.data.data || []);
-        } catch {
-          setBlogs([]);
-        }
-      } else {
-        getAllBlog();
-      }
-    };
-    fetchTabData();
-  }, [tab, getAllBlog]);
+    fetchBlogs();
+  }, [fetchBlogs]);
 
   const filtered = blog.filter((b) =>
-    tab === "ai" ? b.status === "draft" && b.aiGenerated : true
+    tab === "ai" ? b.status === "draft" && b.aiGenerated : true,
   );
 
   return (
@@ -47,7 +45,9 @@ const BlogList = () => {
           <div className="flex gap-3">
             <button
               className={`rounded-pill px-3 py-2 text-sm ${
-                tab === "all" ? "bg-primary text-white" : "bg-surface-soft text-text-primary"
+                tab === "all"
+                  ? "bg-primary text-white"
+                  : "bg-surface-soft text-text-primary"
               }`}
               onClick={() => setTab("all")}
             >
@@ -55,13 +55,18 @@ const BlogList = () => {
             </button>
             <button
               className={`rounded-pill px-3 py-2 text-sm flex items-center gap-2 ${
-                tab === "ai" ? "bg-primary text-white" : "bg-surface-soft text-text-primary"
+                tab === "ai"
+                  ? "bg-primary text-white"
+                  : "bg-surface-soft text-text-primary"
               }`}
               onClick={() => setTab("ai")}
             >
               AI Drafts
               <span className="rounded-pill bg-white/20 px-2 py-0.5 text-[10px]">
-                {blog.filter((b) => b.status === "draft" && b.aiGenerated).length}
+                {
+                  blog.filter((b) => b.status === "draft" && b.aiGenerated)
+                    .length
+                }
               </span>
             </button>
           </div>
@@ -82,6 +87,9 @@ const BlogList = () => {
                 </th>
                 <th className="text-sm border border-gray-300 p-3 text-left">
                   Category
+                </th>
+                <th className="text-sm border border-gray-300 p-3 text-left">
+                  Status
                 </th>
                 <th className="text-sm border border-gray-300 p-3 text-left">
                   Date
@@ -116,7 +124,7 @@ const BlogList = () => {
                   </td>
                   <td className="text-xs border border-gray-300 p-3 text-center">
                     <button onClick={() => toggleFeaturedBlog(blog._id)}>
-                      {blog.isFeatured ? (
+                      {blog.featured ? (
                         <FaStar size={20} className="text-yellow-400" />
                       ) : (
                         <FaRegStar size={20} className="text-yellow-400" />
@@ -130,11 +138,22 @@ const BlogList = () => {
                     {blog.category}
                   </td>
                   <td className="text-xs border border-gray-300 p-3">
+                    <span
+                      className={`rounded-pill px-2 py-0.5 text-[10px] font-medium ${
+                        blog.status === "published"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-amber-100 text-amber-700"
+                      }`}
+                    >
+                      {blog.status}
+                    </span>
+                  </td>
+                  <td className="text-xs border border-gray-300 p-3">
                     {formattedDate(blog.createdAt)}
                   </td>
                   <td className="text-xs border border-gray-300 p-3">
                     <div className="flex gap-2 items-center">
-                      <Link to={`/admin/blog-edit/${blog._id}`}>
+                      <Link to={`/admin/blogs/${blog._id}`}>
                         <FaEdit className="text-blue-800" size={18} />
                       </Link>
                       <button onClick={() => deleteBlog(blog._id)}>

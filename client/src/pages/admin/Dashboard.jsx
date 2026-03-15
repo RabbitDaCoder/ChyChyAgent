@@ -1,28 +1,13 @@
 import { useEffect, useState } from "react";
-import PropTypes from "prop-types";
 import { LuUsers } from "react-icons/lu";
 import { FaCalendarAlt, FaRegNewspaper, FaListAlt } from "react-icons/fa";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
 import { Link } from "react-router-dom";
 import AnalyticsCard from "../../components/admin/AnalyticsCard";
-import { useBlogStore } from "../../stores/useBlogStore";
 import { formattedDate } from "../../utils/dateFormatter";
 import api from "../../utils/api";
 
-const Dashboard = ({ darkMode = false }) => {
-  const [blog, setBlogs] = useState([]);
-  const { getAllBlog, blogs } = useBlogStore();
+const Dashboard = () => {
+  const [recentBlogs, setRecentBlogs] = useState([]);
   const [counts, setCounts] = useState({
     listings: 0,
     enquiries: 0,
@@ -31,116 +16,135 @@ const Dashboard = ({ darkMode = false }) => {
   });
 
   useEffect(() => {
-    getAllBlog();
-  }, []);
+    const fetchData = async () => {
+      try {
+        const [blogsRes, listingsRes, contactRes, plansRes] = await Promise.all(
+          [
+            api.get("/blogs", { params: { limit: 5 } }),
+            api.get("/listings"),
+            api.get("/contact"),
+            api.get("/insurance"),
+          ],
+        );
 
-  useEffect(() => {
-    setBlogs(blogs);
-    setCounts((c) => ({ ...c, blogs: blogs.length }));
-  }, [blogs]);
+        const blogs = blogsRes.data.data.blogs || blogsRes.data.data || [];
+        setRecentBlogs(blogs.slice(0, 5));
 
-  useEffect(() => {
-    const fetchCounts = async () => {
-      const [listingsRes, contactRes, plansRes] = await Promise.all([
-        api.get("/listings"),
-        api.get("/contact"),
-        api.get("/insurance"),
-      ]);
-      setCounts((c) => ({
-        ...c,
-        listings: listingsRes.data.data.listings?.length || 0,
-        enquiries: contactRes.data.data.contacts?.length || 0,
-        plans: plansRes.data.data?.length || 0,
-      }));
+        setCounts({
+          blogs: blogsRes.data.data.total || blogs.length,
+          listings:
+            listingsRes.data.data.total ||
+            listingsRes.data.data.listings?.length ||
+            0,
+          enquiries:
+            contactRes.data.data.contacts?.length ||
+            contactRes.data.data?.length ||
+            0,
+          plans: plansRes.data.data?.length || 0,
+        });
+      } catch (err) {
+        console.error("Dashboard fetch error:", err);
+      }
     };
-    fetchCounts();
+    fetchData();
   }, []);
-
-  useEffect(() => {
-    setBlogs(blogs);
-  }, [blogs]);
 
   return (
-    <div
-      className={`min-h-[calc(100vh-45px)] lg:py-3 lg:px-8 px-2 py-1 ${
-        darkMode ? "bg-gray-900 text-gray-300" : "bg-white text-gray-800"
-      }`}
-    >
-      <div className="grid lg:grid-cols-4 grid-cols-2 lg:gap-6 gap-x-12 items-center lg:my-1">
+    <div className="min-h-[calc(100vh-45px)] space-y-6 px-2 py-3 lg:px-8">
+      <h1 className="font-display text-2xl text-text-primary">Dashboard</h1>
+
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <AnalyticsCard
           icon={LuUsers}
-          title={"Total listings"}
+          title="Total Listings"
           value={counts.listings}
         />
         <AnalyticsCard
           icon={FaCalendarAlt}
-          title={"Enquiries"}
+          title="Enquiries"
           value={counts.enquiries}
         />
         <AnalyticsCard
           icon={FaRegNewspaper}
-          title={"Total blogs"}
+          title="Total Blogs"
           value={counts.blogs}
         />
         <AnalyticsCard
           icon={FaListAlt}
-          title={"Insurance plans"}
+          title="Insurance Plans"
           value={counts.plans}
         />
       </div>
 
-      <div className="border border-stone-400 rounded-lg w-full h-full px-1 py-1 lg:py-3">
-        <div className="w-full max-w-3xl">
-          <h2 className="text-sm  font-extrabold mb-3">Recent Blogs</h2>
-          <table className="w-full border-collapse border  border-gray-300">
-            <thead>
-              <tr className="bg-gray-100 dark:bg-gray-950">
-                <th className="border text-sm border-gray-300 p-2 text-left">
-                  Title
-                </th>
-                <th className="border text-sm border-gray-300 p-2 text-left">
-                  Category
-                </th>
-                <th className="border text-sm border-gray-300 p-2 text-left">
-                  Date
-                </th>
+      <div className="rounded-lg border border-border p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-display text-lg text-text-primary">
+            Recent Blogs
+          </h2>
+          <Link
+            to="/admin/blogs"
+            className="text-body-sm text-primary underline hover:text-primary/80"
+          >
+            See More
+          </Link>
+        </div>
+        <div className="overflow-auto">
+          <table className="min-w-full text-left text-body-sm">
+            <thead className="bg-surface-soft text-text-muted">
+              <tr>
+                <th className="px-4 py-3">Title</th>
+                <th className="px-4 py-3">Category</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Date</th>
               </tr>
             </thead>
             <tbody>
-              {blog.slice(0, 5).map((blog, index) => (
+              {recentBlogs.length === 0 && (
+                <tr>
+                  <td
+                    colSpan="4"
+                    className="px-4 py-6 text-center text-text-muted"
+                  >
+                    No blogs yet
+                  </td>
+                </tr>
+              )}
+              {recentBlogs.map((blog) => (
                 <tr
-                  key={index}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-950"
+                  key={blog._id}
+                  className="border-t border-border hover:bg-surface-soft/50"
                 >
-                  <td className="border text-xs border-gray-300 p-2">
-                    {blog.title}
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      {blog.title}
+                      {blog.aiGenerated && (
+                        <span className="rounded-pill bg-amber-100 px-2 py-0.5 text-[10px] font-mono text-primary">
+                          AI
+                        </span>
+                      )}
+                    </div>
                   </td>
-                  <td className="border text-xs border-gray-300 p-2">
-                    {blog.category}
+                  <td className="px-4 py-3 capitalize">{blog.category}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`rounded-pill px-2 py-0.5 text-[10px] font-medium ${
+                        blog.status === "published"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-amber-100 text-amber-700"
+                      }`}
+                    >
+                      {blog.status}
+                    </span>
                   </td>
-                  <td className="border text-xs border-gray-300 p-2">
-                    {formattedDate(blog.createdAt)}
-                  </td>
+                  <td className="px-4 py-3">{formattedDate(blog.createdAt)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
-
-      <div className="flex justify-end mt-3">
-        <Link
-          to={"/admin/blog-list"}
-          className="text-sm text-black dark:text-white rounded-md underline hover:text-blue-700"
-        >
-          See More
-        </Link>
-      </div>
     </div>
   );
-};
-Dashboard.propTypes = {
-  darkMode: PropTypes.bool,
 };
 
 export default Dashboard;

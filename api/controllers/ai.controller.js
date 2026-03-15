@@ -269,7 +269,7 @@ export const saveAsDraft = asyncHandler(async (req, res) => {
     coverImage: coverImage || "",
     status: "draft",
     featured: false,
-    author: "Eloike Maryann",
+    author: req.user?.name || "Eloike Maryann",
     aiGenerated: true,
   });
 
@@ -314,7 +314,7 @@ export const publishDirectly = asyncHandler(async (req, res) => {
     coverImage: coverImage || "",
     status: "published",
     featured: false,
-    author: "Eloike Maryann",
+    author: req.user?.name || "Eloike Maryann",
     aiGenerated: true,
     publishedAt: new Date(),
   });

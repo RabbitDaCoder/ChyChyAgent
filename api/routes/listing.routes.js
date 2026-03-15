@@ -3,6 +3,7 @@ import {
   getListings,
   getFeaturedListings,
   getListing,
+  getListingById,
   createListing,
   updateListing,
   deleteListing,
@@ -17,12 +18,30 @@ const router = express.Router();
 
 router.get("/", getListings);
 router.get("/featured", getFeaturedListings);
+router.get("/by-id/:id", getListingById);
 router.get("/:slug", getListing);
 
-router.post("/", protectedRoute, requireAdmin, upload.array("images"), createListing);
-router.put("/:id", protectedRoute, requireAdmin, upload.array("images"), updateListing);
+router.post(
+  "/",
+  protectedRoute,
+  requireAdmin,
+  upload.array("images"),
+  createListing,
+);
+router.put(
+  "/:id",
+  protectedRoute,
+  requireAdmin,
+  upload.array("images"),
+  updateListing,
+);
 router.delete("/:id", protectedRoute, requireAdmin, deleteListing);
 router.patch("/:id/status", protectedRoute, requireAdmin, updateStatus);
-router.patch("/:id/feature", protectedRoute, requireAdmin, toggleFeaturedListing);
+router.patch(
+  "/:id/feature",
+  protectedRoute,
+  requireAdmin,
+  toggleFeaturedListing,
+);
 
 export default router;
