@@ -69,8 +69,7 @@ export function PolaroidCard({ photo, index }) {
               style={{
                 width: "100%",
                 height: "100%",
-                background:
-                  "linear-gradient(135deg, #D5C5BB 0%, #C4B0A4 100%)",
+                background: "linear-gradient(135deg, #D5C5BB 0%, #C4B0A4 100%)",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
