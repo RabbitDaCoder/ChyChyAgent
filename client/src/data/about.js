@@ -238,41 +238,51 @@ export const CERTIFICATIONS = [
   },
 ];
 
+// GALLERY — polaroid carousel on the About page.
+// Replace src values with real Cloudinary URLs
+// when Maryann provides photos.
+// Rotation values are fixed — do not randomise.
 export const GALLERY = [
   {
     id: "g1",
     src: "",
-    alt: "Maryann at a client consultation",
-    caption: "Client Consultation",
+    alt: "Maryann at a client property consultation in Lagos",
+    caption: "Client consultation",
+    rotation: -3.8,
   },
   {
     id: "g2",
     src: "",
-    alt: "ChyChyAgent office Lagos",
-    caption: "Our Lagos Office",
+    alt: "ChyChyAgent office Lagos — working space",
+    caption: "Our Lagos office",
+    rotation: 2.4,
   },
   {
     id: "g3",
     src: "",
-    alt: "Property site visit",
-    caption: "Property Site Visit",
+    alt: "Maryann at a property site visit",
+    caption: "Site visit",
+    rotation: -1.6,
   },
   {
     id: "g4",
     src: "",
-    alt: "Insurance client meeting",
-    caption: "Insurance Advisory Session",
+    alt: "Insurance advisory session with a client",
+    caption: "Insurance session",
+    rotation: 3.2,
   },
   {
     id: "g5",
     src: "",
-    alt: "Maryann at an industry event",
-    caption: "Industry Event",
+    alt: "Maryann at a real estate industry event",
+    caption: "Industry event",
+    rotation: -2.5,
   },
   {
     id: "g6",
     src: "",
-    alt: "Property handover ceremony",
-    caption: "Property Handover",
+    alt: "Property handover ceremony with a client",
+    caption: "Handover day",
+    rotation: 1.8,
   },
 ];

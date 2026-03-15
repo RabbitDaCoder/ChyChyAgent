@@ -9,7 +9,6 @@ import {
   Award,
   Users,
   CheckCircle,
-  Camera,
   Home,
   Star,
   MessageCircle,
@@ -17,6 +16,8 @@ import {
 } from "lucide-react";
 import { SEO } from "../../components/shared/SEO";
 import CareerTimeline from "../../components/shared/CareerTimeline";
+import { PolaroidCarousel } from "../../components/shared/PolaroidCarousel";
+import { PolaroidCard } from "../../components/shared/PolaroidCard";
 import {
   OWNER,
   STATS,
@@ -124,11 +125,11 @@ export default function About() {
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
-            className="flex h-[280px] items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-primary-light to-accent-soft md:h-[400px]"
+            className="flex items-end justify-center gap-4 overflow-hidden py-4 md:h-[400px]"
           >
-            <span className="select-none font-display text-[6rem] text-primary opacity-40">
-              ME
-            </span>
+            {GALLERY.slice(0, 3).map((photo, i) => (
+              <PolaroidCard key={photo.id} photo={photo} index={i} />
+            ))}
           </motion.div>
         </div>
       </section>
@@ -290,48 +291,8 @@ export default function About() {
       </section>
 
       {/* ── Section 7 — Photo Gallery ──────────────── */}
-      <section className="overflow-hidden bg-primary py-16">
-        <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-center font-display text-display-xl text-white">
-            Moments &amp; Milestones
-          </h2>
-          <p className="mx-auto mt-3 text-center text-body-md text-white/70">
-            A glimpse into the work and the journey.
-          </p>
-        </div>
-
-        <div className="relative mt-12">
-          <div className="flex gap-4 overflow-x-auto px-6 pb-4 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/20">
-            {GALLERY.map((item) => (
-              <div
-                key={item.id}
-                className="relative h-60 w-72 flex-shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-primary-dark to-primary"
-              >
-                {item.src ? (
-                  <img
-                    src={item.src}
-                    alt={item.alt}
-                    className="h-full w-full object-cover transition-transform hover:scale-105"
-                  />
-                ) : (
-                  <div className="flex h-full flex-col items-center justify-center gap-2">
-                    <Camera size={32} className="text-white/30" />
-                    <span className="font-mono text-label text-white/40">
-                      Photo coming soon
-                    </span>
-                  </div>
-                )}
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-                  <p className="font-mono text-label text-white line-clamp-1">
-                    {item.caption}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-          {/* Fade-out gradient right edge */}
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-primary to-transparent" />
-        </div>
+      <section style={{ padding: "4rem 0", overflow: "hidden" }}>
+        <PolaroidCarousel />
       </section>
 
       {/* ── Section 8 — WhatsApp CTA ──────────────── */}
