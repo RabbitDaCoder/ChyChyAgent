@@ -15,20 +15,23 @@ export function buildPostUrl(slug) {
   return `${SITE_URL}/blog/${slug}`;
 }
 
-// ── Twitter/X share ───────────────────────────────────
-// Format: "Post Title URL via @handle"
-export function buildTwitterShare(title, slug) {
+// ── Unified share message ─────────────────────────────
+// Used across all text-based platforms
+export function buildShareMessage(title, slug) {
   const url = buildPostUrl(slug);
-  const text = `${title} ${url} via ${SOCIAL_HANDLES.twitter}`;
+  const waLink = `https://wa.me/${SOCIAL_HANDLES.whatsapp}`;
+  return `Post from ${title} - \n\n\n ${url} -\n\n\nMessage me at\n\n\n${waLink}`;
+}
+
+// ── Twitter/X share ───────────────────────────────────
+export function buildTwitterShare(title, slug) {
+  const text = buildShareMessage(title, slug);
   return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
 }
 
 // ── WhatsApp status share ─────────────────────────────
-// Format: "Post from [Title] - [URL] - wa.me/[number]"
 export function buildWhatsAppShare(title, slug) {
-  const url = buildPostUrl(slug);
-  const waLink = `https://wa.me/${SOCIAL_HANDLES.whatsapp}`;
-  const message = `Post from ${title} - ${url} - ${waLink}`;
+  const message = buildShareMessage(title, slug);
   const isMobile = /iPhone|Android/i.test(navigator.userAgent);
   const base = isMobile ? "whatsapp://send" : "https://web.whatsapp.com/send";
   return `${base}?text=${encodeURIComponent(message)}`;
@@ -44,8 +47,7 @@ export function buildFacebookShare(slug) {
 // ── Instagram caption builder ─────────────────────────
 // Instagram has no web share API — copy caption to clipboard
 export function buildInstagramCaption(title, slug) {
-  const url = buildPostUrl(slug);
-  return `${title} — Read more: ${url}\n\nFollow ${SOCIAL_HANDLES.instagram} for real estate and insurance tips.`;
+  return buildShareMessage(title, slug);
 }
 
 // ── Clipboard copy ────────────────────────────────────
